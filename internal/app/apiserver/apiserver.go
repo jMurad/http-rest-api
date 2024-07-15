@@ -1,7 +1,6 @@
 package apiserver
 
 import (
-	"fmt"
 	"io"
 	"net/http"
 
@@ -66,7 +65,7 @@ func (s *APIServer) configureRouter() {
 // handleHello ...
 func (s *APIServer) handleHello() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		io.WriteString(w, fmt.Sprintf("Hello -> %v", r.Host))
+		io.WriteString(w, "Hello")
 	}
 }
 
