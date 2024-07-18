@@ -49,7 +49,6 @@ func TestServer_AuthenticateUser(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			rec := httptest.NewRecorder()
-
 			req, _ := http.NewRequest(http.MethodGet, "/", nil)
 			cookieStr, _ := sc.Encode(sessionName, tc.cookieValue)
 			req.Header.Set("Cookie", fmt.Sprintf("%s=%s", sessionName, cookieStr))
