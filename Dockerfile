@@ -10,7 +10,7 @@ FROM alpine AS production
 
 WORKDIR /app
 COPY --from=builder /app/server .
-COPY --from=builder /app/configs/apiserver.toml ./configs/apiserver.toml
+COPY --from=builder /app/configs/apiserver_prod.toml ./configs/apiserver.toml
 
 EXPOSE 8080
 

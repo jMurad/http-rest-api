@@ -12,6 +12,10 @@ stop:
 initilize:
 	chmod ugo+x tools/initilize.sh && tools/./initilize.sh
 
+.PHONY: postgres
+postgres:
+	docker run --name postgres -d -p 54331:5432 -e POSTGRES_PASSWORD=123456 postgres
+
 migrate:
 	migrate -path migrations -database "postgres://postgres:123456@localhost:5432/restapi_dev?sslmode=disable" -verbose up
 
