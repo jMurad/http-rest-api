@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"io"
 	"net/http"
 	"time"
 
@@ -63,7 +65,7 @@ func (s *server) configureRouter() {
 	// /private/***
 	private := s.router.PathPrefix("/private").Subrouter()
 	private.Use(s.authenticateUser)
-	private.HandleFunc("/whoami", s.handleWhoami()).Methods("GET")
+	private.HandleFunc("/whoami", s.handleWhoami())
 }
 
 func (s *server) setRequestID(next http.Handler) http.Handler {
@@ -92,6 +94,40 @@ func (s *server) logRequest(next http.Handler) http.Handler {
 			http.StatusText(rw.code),
 			time.Since(start),
 		)
+
+		session, err := s.sessionStore.Get(r, sessionName)
+		if err != nil {
+			s.error(w, r, http.StatusInternalServerError, err)
+			return
+		}
+
+		vals := "\n"
+		for k, v := range session.Values {
+			vals += fmt.Sprintf("<%v: %v>\n", k, v)
+		}
+
+		logger.Infof(
+			"session data:%vend.\n",
+			vals,
+		)
+
+		b, err := io.ReadAll(r.Body)
+		if err != nil {
+			s.error(w, r, http.StatusInternalServerError, err)
+			return
+		}
+
+		heads := "\n"
+		for k, v := range r.Header {
+			heads += fmt.Sprintf("<%v: %v>\n", k, v)
+		}
+
+		logger.Infof(
+			"request body:\n%send.\nheadeers data: %vend.\n",
+			b,
+			heads,
+		)
+
 	})
 }
 
@@ -178,8 +214,9 @@ func (s *server) handleSessionsCreate() http.HandlerFunc {
 		}
 
 		session.Values["user_id"] = u.ID
-		if err := session.Save(r, w); err != nil {
+		if err := s.sessionStore.Save(r, w, session); err != nil {
 			s.error(w, r, http.StatusInternalServerError, err)
+			return
 		}
 
 		s.respond(w, r, http.StatusOK, nil)
@@ -191,7 +228,6 @@ func (s *server) error(w http.ResponseWriter, r *http.Request, code int, err err
 }
 
 func (s *server) respond(w http.ResponseWriter, r *http.Request, code int, data interface{}) {
-	_ = r
 	w.WriteHeader(code)
 	if data != nil {
 		json.NewEncoder(w).Encode(data)

@@ -19,6 +19,7 @@ func Start(config *Config) error {
 	store := sqlstore.New(db)
 	sessionStore := sessions.NewCookieStore([]byte(config.SessionKey))
 	srv := newServer(store, sessionStore)
+	srv.logger.Infof("server started...")
 
 	return http.ListenAndServe(config.BindAddr, srv)
 }

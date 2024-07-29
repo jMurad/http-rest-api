@@ -19,6 +19,10 @@ postgres:
 migrate:
 	migrate -path migrations -database "postgres://postgres:123456@localhost:5432/restapi_dev?sslmode=disable" -verbose up
 
+migratelocal:
+	migrate -path migrations -database "postgres://postgres:123456@localhost:54331/restapi_dev?sslmode=disable" -verbose up
+
+
 .PHONY: test
 test:
 	go test -v -race -timeout 30s ./...
