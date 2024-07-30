@@ -4,8 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
-	"io"
 	"net/http"
 	"time"
 
@@ -88,44 +86,21 @@ func (s *server) logRequest(next http.Handler) http.Handler {
 		rw := &responseWriter{w, http.StatusOK}
 		next.ServeHTTP(rw, r)
 
-		logger.Infof(
-			"complited with %d %s in %v",
+		var level logrus.Level
+		switch {
+		case rw.code >= 500:
+			level = logrus.ErrorLevel
+		case rw.code >= 400:
+			level = logrus.WarnLevel
+		default:
+			level = logrus.InfoLevel
+		}
+		logger.Logf(
+			level,
+			"completed with %d %s in %v",
 			rw.code,
 			http.StatusText(rw.code),
 			time.Since(start),
-		)
-
-		session, err := s.sessionStore.Get(r, sessionName)
-		if err != nil {
-			s.error(w, r, http.StatusInternalServerError, err)
-			return
-		}
-
-		vals := "\n"
-		for k, v := range session.Values {
-			vals += fmt.Sprintf("<%v: %v>\n", k, v)
-		}
-
-		logger.Infof(
-			"session data:%vend.\n",
-			vals,
-		)
-
-		b, err := io.ReadAll(r.Body)
-		if err != nil {
-			s.error(w, r, http.StatusInternalServerError, err)
-			return
-		}
-
-		heads := "\n"
-		for k, v := range r.Header {
-			heads += fmt.Sprintf("<%v: %v>\n", k, v)
-		}
-
-		logger.Infof(
-			"request body:\n%send.\nheadeers data: %vend.\n",
-			b,
-			heads,
 		)
 
 	})

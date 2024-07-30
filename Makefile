@@ -22,6 +22,8 @@ migrate:
 migratelocal:
 	migrate -path migrations -database "postgres://postgres:123456@localhost:54331/restapi_dev?sslmode=disable" -verbose up
 
+pgstart:
+	docker start postgres
 
 .PHONY: test
 test:
